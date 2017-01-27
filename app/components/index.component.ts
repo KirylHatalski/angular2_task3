@@ -4,6 +4,7 @@ import { Component } from '@angular/core';
   selector: 'my-app',
   template: `<weather></weather>
              <googlemaps></googlemaps>
+             <position-check></position-check>
              <table-component></table-component>`
 })
 

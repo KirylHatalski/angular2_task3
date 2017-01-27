@@ -2,7 +2,7 @@ import {Injectable} from '@angular/core';
 import '../interfaces/marker.interface';
 
 @Injectable()
-export class MarkerServise {
+export class MarkerService {
 
     createMarkers(list: Array<IDataListItem>, map: google.maps.Map) {
 

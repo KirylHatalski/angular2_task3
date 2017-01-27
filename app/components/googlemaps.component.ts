@@ -1,32 +1,50 @@
 import '../interfaces/position.interface';
 import '../interfaces/weather.interface';
 
-import { Component } from '@angular/core';
-import { PositionServise } from '../services/position.service';
-import { MarkerServise } from '../services/marker.service';
+import { Component, OnInit, Input } from '@angular/core';
+import { PositionService } from '../services/position.service';
+import { PositionCheckService } from '../services/position_check.service';
+import { MarkerService } from '../services/marker.service';
+import { DataStorageService } from '../services/data_storage.service';
+// import { PositiopCheckerComponent } from '../components/position_check.component';
 
 @Component({
     selector: 'googlemaps',
-    providers: [PositionServise, MarkerServise],
-    template: `<div class='map'></div>`
+    providers: [PositionService, MarkerService, PositionCheckService, DataStorageService],
+    template:`<div class='map'></div>`
 })
 
-export class GooglemapsComponent {
-    tmarkerServise: MarkerServise;
-    tpositionServise: PositionServise;
-    constructor(PositionServise: PositionServise, MarkerServise: MarkerServise) {
-        this.tpositionServise = PositionServise;
-        this.tmarkerServise = MarkerServise;
+export class GooglemapsComponent implements OnInit {
+    // coords: ICoordinates;
+    coord_temp: ICoordinates;
+    count: number;
+    map: google.maps.Map;
+    // location: IResult;
 
-        this.tpositionServise.getPosition().then((data: ICoordinates) => {
-            this.initMap(data)
-        });
+      // @Output() locationUpd: EventEmitter<boolean> = new EventEmitter;
+    @Input() coords: ICoordinates;
+
+    constructor(
+      public tMarkerService: MarkerService,
+      public tPositionService: PositionService,
+      public tDataStorageService:DataStorageService,
+      public tPositionCheckService: PositionCheckService) {
+
+       }
+
+    ngOnInit(){
+      // console.log(this.coords);
+      this.tPositionService.getPosition().then((data: ICoordinates) => {
+        this.initMap(data)
+      });
     }
+
 
     initMap(coords: ICoordinates) {
         let elem = document.createElement('script'),
-            map: google.maps.Map,
             markers: IWeather;
+
+        this.count = 0;
 
 
         elem.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyA2BbPGgt4MP4YD12z5AftgBgGS9vitNJE&callback=googleResponse`;
@@ -35,17 +53,50 @@ export class GooglemapsComponent {
         (<IWindow>window).googleResponse = () => {
             markers = JSON.parse(localStorage.getItem('weather'));
 
-            map = new google.maps.Map(document.querySelector('.map'), {
+            this.map = new google.maps.Map(document.querySelector('.map'), {
                 center: { lat: coords.latitude, lng: coords.longitude },
                 zoom: 10,
                 mapTypeId: google.maps.MapTypeId.SATELLITE
             });
 
+            this.getStartLocation(this.map, coords);
+            this.tDataStorageService.setMap(this.map);
+
+            google.maps.event.addListener(this.map, 'bounds_changed', ()=>{
+              this.coord_temp = coords;
+              if(this.count > 30){
+                this.count = 0;
+                this.tPositionCheckService.getCurrentLocationData(this.map, this.coord_temp).then((value: IPositionCheck) => {
+                if(value.status == 'OK'){
+                  this.coord_temp = {
+                    latitude: value.results[0].geometry.location.lat,
+                    longitude: value.results[0].geometry.location.lng
+                  }
+                  this.tDataStorageService.setLocation(value.results[0]);
+                }
+              });
+            } else {
+              this.count+=1;
+            }
+            })
+
             if (localStorage.getItem('weather')) {
-                this.tmarkerServise.createMarkers(markers.list, map);
-            } else { //hehehe
+                this.tMarkerService.createMarkers(markers.list, this.map);
+            } else {
                 setTimeout((<IWindow>window).googleResponse, 2000);
             }
         }
+    }
+
+    getStartLocation(map: google.maps.Map, coords: ICoordinates){
+      this.tPositionCheckService.getCurrentLocationData(map, null).then((value: IPositionCheck) => {
+      if(value.status == 'OK'){
+        this.coord_temp = {
+          latitude: value.results[0].geometry.location.lat,
+          longitude: value.results[0].geometry.location.lng
+        }
+        this.tDataStorageService.setLocation(value.results[0]);
+      }
+    });
     }
 }

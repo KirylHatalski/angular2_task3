@@ -14,6 +14,13 @@ body
   position: fixed !important
   top: 0
 
+.current-location
+  display: block
+  position: absolute
+  top: 5%
+  left: 10%
+  z-index: 1
+
 .table-main
   min-height: 56px
   width: 666px
@@ -66,10 +73,31 @@ body
 #table-id
   display: none
 
+.invisible
+  visibility: hidden
 
 .table-content
   width: 100%
   text-align: center
+  vertical-align: middle
+
+  tablerow
+    display: table
+    vertical-align: middle
+    border-color: inherit
+
+    &:first-child
+      text-align: left
+
+  .favorite
+    color: rgb(254, 236, 0)
+    &.unfav
+      color: rgba(0,0,0,0)
+    i
+      cursor: pointer
+      font-style: normal
+      width: 15px
+      height: 15px
 
   td:first-child
     text-align: left
@@ -79,3 +107,24 @@ body
     padding-right: 5px
   .active
     color: rgb(66, 0, 255)
+  .compass
+    position: relative
+    .nord
+      font-size: 10px
+      color: #1706ff
+      right: 50%
+      top: 0
+      transform: translateX(50%)
+    .power
+      color: rgba(245, 245, 245, 0.67)
+      strong
+        font-size: 1.8em
+    &>div
+      position: absolute
+      transform: translateY(-50%)
+    .direction
+      color: #f00;
+      font-size: 45px;
+      position: absolute;
+      top: 0px;
+      left: -9px;

@@ -10,6 +10,7 @@ interface IDataListItem {
   weather: Array<IIcons>;
   main: ITemperatyre;
   name: string;
+  favor: boolean;
 }
 
 interface IIcons {
